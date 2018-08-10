@@ -4,21 +4,17 @@ using System.Linq;
 
 namespace FSImageGenerator.Classes.Data {
     class DataArea : IPart {
-        private List<Cluster> mClusters = new List<Cluster>();
+        private readonly Cluster[] mClusters;
 
-        public IEnumerable<Byte> GetBytes() {
-            return this.mClusters.SelectMany(x => x.GetBytes());
+        public DataArea(UInt16 clustersCount, Byte sectorsPerCluster, UInt16 bytesperSector) {
+            this.mClusters = Enumerable.Range(0, clustersCount)
+                .Select(_ => new Cluster(sectorsPerCluster, bytesperSector))
+                .ToArray();
         }
 
-        public UInt16 ClustersCount {
-            get => Convert.ToUInt16(this.mClusters.Count);
-            set {
-                if (this.mClusters.Count != value) {
-                    this.mClusters.Clear();
-                    this.mClusters.AddRange(Enumerable.Range(0, value).Select(_ => new Cluster()));
-                }
-            }
-        }
+        public IEnumerable<Byte> GetBytes() => this.mClusters.SelectMany(x => x.GetBytes());
+
+        public UInt16 ClustersCount => Convert.ToUInt16(this.mClusters.Length);
 
         public Cluster this[Int32 index] => this.mClusters[index];
     }

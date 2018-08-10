@@ -4,35 +4,31 @@ using System.Linq;
 
 namespace FSImageGenerator.Classes.Data {
     class Cluster : IPart {
-        private List<Sector> mSectors = new List<Sector>();
+        private readonly Sector[] mSectors;
 
-        public IEnumerable<Byte> GetBytes() {
-            return this.mSectors.SelectMany(x => x.GetBytes());
+        public Cluster(Byte sectorsPerCluster, UInt16 bytesPerSector)
+        {
+            this.mSectors = Enumerable.Range(0, sectorsPerCluster)
+                .Select(_ => new Sector(bytesPerSector))
+                .ToArray();
         }
 
-        public Byte SectorsPerCluster {
-            get { return Convert.ToByte(this.mSectors.Count); }
-            set {
-                if (this.mSectors.Count != value) {
-                    this.mSectors.Clear();
-                    this.mSectors.AddRange(Enumerable.Range(0, value).Select(_ => new Sector()));
-                }
-            }
-        }
+        public IEnumerable<Byte> GetBytes() => this.mSectors.SelectMany(x => x.GetBytes());
+
+        public Byte SectorsPerCluster => Convert.ToByte(this.mSectors.Length);
 
         public Sector this[Int32 index] {
             get => this.mSectors[index];
-            set => this.mSectors[index] = value;
         }
 
-        public void SetContent(IEnumerable<Byte> clusterContent) {
+        public void SetBytes(IEnumerable<Byte> value) {
             var availableSpace = this.mSectors.Sum(x => x.BytesPerSector);
 
-            if (clusterContent.Count() > availableSpace) {
+            if (value.Count() > availableSpace) {
                 throw new ArgumentOutOfRangeException("Размер массива данных превышает размер кластера!");
             }
 
-            using (var enumerator = clusterContent.GetEnumerator()) {
+            using (var enumerator = value.GetEnumerator()) {
                 foreach (var sector in this.mSectors) {
                     for (var i = 0; i < sector.BytesPerSector; i++) {
                         if (!enumerator.MoveNext()) {

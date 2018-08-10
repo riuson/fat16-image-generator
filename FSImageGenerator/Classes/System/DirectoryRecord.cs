@@ -6,10 +6,34 @@ using System.Linq;
 
 namespace FSImageGenerator.Classes.System {
     public class DirectoryRecord : IPart {
+        private Boolean mIsEmpty;
+        private String mName;
+        private Attributes mEntryAttributes;
+        private DateTime mCreation;
+        private DateTime mAccess;
+        private DateTime mWrite;
+        private UInt16 mStartingCluster;
+        private UInt32 mFileSize;
+
+        public DirectoryRecord() => this.Clear();
+
+        public void Clear() {
+            this.mIsEmpty = true;
+            this.mName = String.Empty;
+            this.mEntryAttributes = Attributes.None;
+            this.mCreation = DateTime.Now;
+            this.mAccess = DateTime.Now;
+            this.mWrite = DateTime.Now;
+            this.mStartingCluster = 0;
+            this.mFileSize = 0;
+        }
+
+        public Boolean IsEmpty => this.mIsEmpty;
+
         public IEnumerable<Byte> GetBytes() {
             var result = new Byte[32];
 
-            if (this.EntryAttributes == Attributes.None) {
+            if (this.IsEmpty) {
                 return result;
             }
 
@@ -54,7 +78,13 @@ namespace FSImageGenerator.Classes.System {
             return result;
         }
 
-        public String Name { get; set; } = String.Empty;
+        public String Name {
+            get => this.mName;
+            set {
+                this.mName = value;
+                this.mIsEmpty = false;
+            }
+        }
 
         [Flags]
         public enum Attributes : Byte {
@@ -67,12 +97,53 @@ namespace FSImageGenerator.Classes.System {
             Archive = 0x20
         }
 
-        public Attributes EntryAttributes { get; set; } = Attributes.None;
-        public DateTime Creation { get; set; } = DateTime.Now;
-        public DateTime Access { get; set; } = DateTime.Now;
-        public DateTime Write { get; set; } = DateTime.Now;
-        public UInt16 StartingCluster { get; set; } = 0;
-        public UInt32 FileSize { get; set; } = 0;
+        public Attributes EntryAttributes {
+            get => this.mEntryAttributes;
+            set {
+                this.mEntryAttributes = value;
+                this.mIsEmpty = false;
+            }
+        }
+
+        public DateTime Creation {
+            get => this.mCreation;
+            set {
+                this.mCreation = value;
+                this.mIsEmpty = false;
+            }
+        }
+
+        public DateTime Access {
+            get => this.mAccess;
+            set {
+                this.mAccess = value;
+                this.mIsEmpty = false;
+            }
+        }
+
+        public DateTime Write {
+            get => this.mWrite;
+            set {
+                this.mWrite = value;
+                this.mIsEmpty = false;
+            }
+        }
+
+        public UInt16 StartingCluster {
+            get => this.mStartingCluster;
+            set {
+                this.mStartingCluster = value;
+                this.mIsEmpty = false;
+            }
+        }
+
+        public UInt32 FileSize {
+            get => this.mFileSize;
+            set {
+                this.mFileSize = value;
+                this.mIsEmpty = false;
+            }
+        }
 
         public static UInt16 RecordSize => 32;
     }

@@ -3,23 +3,19 @@ using System.Collections.Generic;
 
 namespace FSImageGenerator.Classes.Data {
     class Sector : IPart {
-        private Byte[] mBytes = new Byte[0] { };
-        public IEnumerable<Byte> GetBytes() {
-            return this.mBytes;
+        private readonly Byte[] mBytes;
+
+        public Sector(UInt16 bytesPerSector) {
+            this.mBytes = new Byte[bytesPerSector];
         }
 
-        public UInt16 BytesPerSector {
-            get { return Convert.ToUInt16(this.mBytes.Length); }
-            set {
-                if (this.mBytes.Length != value) {
-                    this.mBytes = new Byte[value];
-                }
-            }
-        }
+        public IEnumerable<Byte> GetBytes() => this.mBytes;
+
+        public UInt16 BytesPerSector => Convert.ToUInt16(this.mBytes.Length);
 
         public Byte this[Int32 index] {
-            get { return this.mBytes[index]; }
-            set { this.mBytes[index] = value; }
+            get => this.mBytes[index];
+            set => this.mBytes[index] = value;
         }
     }
 }

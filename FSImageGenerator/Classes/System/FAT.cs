@@ -4,42 +4,28 @@ using System.Linq;
 
 namespace FSImageGenerator.Classes.System {
     class FAT : IPart {
-        private UInt16 mSectorsPerFat;
-        private UInt16[] mTable = new UInt16[] { };
+        private readonly UInt16 mSectorsPerFat;
+        private readonly UInt16 mClustersPerFat;
+        private readonly UInt16[] mTable = new UInt16[] { };
 
-        public FAT() {
-            this.SectorsPerFat = 1;
+        public FAT(UInt16 sectorsPerFat, UInt16 bytesPerSector) {
+            this.mSectorsPerFat = sectorsPerFat;
+            this.mClustersPerFat = Convert.ToUInt16((this.mSectorsPerFat * bytesPerSector) / sizeof(UInt16));
+            this.mTable = new UInt16[this.mClustersPerFat];
+
+            //for (var i = 2; i < this.mClustersPerFat; i++) {
+            //    this.mTable[i] = Convert.ToUInt16(ClusterState.Free);
+            //}
+            this.mTable[0] = 0xfff8;
+            this.mTable[1] = 0xffff;
         }
 
-        public IEnumerable<Byte> GetBytes() {
-            return this.mTable.SelectMany(x => BitConverter.GetBytes(x));
-        }
-
-        /// <summary>
-        /// Число кластеров, которые может обслуживать FAT.
-        /// </summary>
-        public UInt16 ClustersPerFat => Convert.ToUInt16((this.mSectorsPerFat * 512u) / 2u);
-
-        /// <summary>
-        /// Число секторов, используемых для хранения копии FAT, из загрузочного сектора.
-        /// </summary>
-        public UInt16 SectorsPerFat {
-            get => this.mSectorsPerFat;
-            set {
-                this.mSectorsPerFat = value;
-
-                if (this.mTable.Length != this.ClustersPerFat) {
-                    this.mTable = new UInt16[this.ClustersPerFat];
-                    this.mTable[0] = 0xfff8;
-                    this.mTable[1] = 0xffff;
-                }
-            }
-        }
+        public IEnumerable<Byte> GetBytes() => this.mTable.SelectMany(x => BitConverter.GetBytes(x));
 
         public UInt16 FindEmptyCluster() {
             for (UInt16 i = 0; i < this.mTable.Length; i++) {
-                if (this.mTable[i] == 0x0000) {
-                    return Convert.ToUInt16(i);
+                if (this.mTable[i] == Convert.ToUInt16(ClusterState.Free)) {
+                    return i;
                 }
             }
 
@@ -53,20 +39,20 @@ namespace FSImageGenerator.Classes.System {
             LastInChain = 0xfff8
         }
 
-        public void MarkCluster(UInt16 index, ClusterState state) {
+        public void SetCluster(UInt16 index, ClusterState state) {
             this.SetCluster(index, Convert.ToUInt16(state));
         }
 
-        public void SetCluster(UInt16 index, UInt16 nextIndexOrState) {
-            if (index <= 1 || index >= this.ClustersPerFat) {
+        public void SetCluster(UInt16 index, UInt16 nextIndex) {
+            if (index <= 1 || index >= this.mClustersPerFat) {
                 throw new IndexOutOfRangeException($"Указан недопустимый индекс кластера: {index}");
             }
 
-            if (nextIndexOrState == 0x0001) {
-                throw new IndexOutOfRangeException($"Указано недопустимое содержимое кластера: {nextIndexOrState}");
+            if (nextIndex == 0x0001) {
+                throw new IndexOutOfRangeException($"Указано недопустимое содержимое кластера: {nextIndex}");
             }
 
-            this.mTable[index] = nextIndexOrState;
+            this.mTable[index] = nextIndex;
         }
     }
 }
