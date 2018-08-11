@@ -80,11 +80,14 @@ namespace FSImageGenerator.Classes {
                 directoryRecord.Name = filename;
                 directoryRecord.StartingCluster = clusterIndex;
 
+                var count = contentOfClusters.Count();
+                var counter = 0;
+
                 foreach (var contentOfCluster in contentOfClusters) {
                     this.SystemArea.Fat.SetCluster(clusterIndex, FAT.ClusterState.LastInChain);
                     this.DataArea[clusterIndex - 2].SetBytes(contentOfCluster);
 
-                    if (contentOfCluster == contentOfClusters.Last()) {
+                    if (++counter == count) {
                         break;
                     }
 
